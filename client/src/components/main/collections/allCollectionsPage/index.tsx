@@ -1,34 +1,45 @@
 import './index.css';
 import DeleteCollectionButton from '../../collections/deleteCollectionButton';
+import useAllCollectionsPage from '../../../../hooks/useAllCollectionsPage';
+import { useParams, useNavigate } from 'react-router-dom';
+import { DatabaseCollection } from '../../../../../../shared/types/collection';
 
-/**
- * Component for displaying all collections belonging to a user.
- * Uses the useAllCollectionsPage hook for state management.
- * 
- * Note: All classnames must be preserved for CSS styling and testing.
- * You can add more classnames as needed.
- */
 const AllCollectionsPage = () => {
+  const { username = '' } = useParams();
+  const navigate = useNavigate();
+  const { collections, loading, error } = useAllCollectionsPage(username);
+  const typedCollections = collections as DatabaseCollection[];
 
   return (
     <div className='collections-page'>
       <div className='collections-header'>
-        <h1 className='collections-title'>Username's Collections</h1>
-        <button className='collections-create-btn'>
-            Create Collection if owner
-          </button>
+        <h1 className='collections-title'>{username}'s Collections</h1>
+        <button className='collections-create-btn' onClick={() => navigate('/new/collection')}>
+          Create Collection
+        </button>
       </div>
 
       <div className='collections-list'>
-        <div
+        {loading && <div className='loading-message'>loading collections...</div>}
+
+        {error && <div className='error-message'>{error}</div>}
+
+        {!loading && !error && typedCollections.length === 0 && (
+          <div className='loading-message'>no collection yet</div>
+        )}
+
+        {typedCollections.map(collection => (
+          <div
             className='collection-card'
-            onClick={() => alert('Navigate to collection details')}>
-            <h2 className='collection-name'>Collection Name</h2>
-            <p className='collection-description'>Collecton Desc</p>
-            <p className='collection-privacy'>Collection Privacy</p>
-            <p className='collection-questions'>Number of Questions in the collection</p>
-            <DeleteCollectionButton collectionId='someId'/>
+            key={collection._id.toString()}
+            onClick={() => navigate(`/collections/${username}/${collection._id.toString()}`)}>
+            <h2 className='collection-name'>{collection.name}</h2>
+            <p className='collection-description'>{collection.description || 'No description'}</p>
+            <p className='collection-privacy'>{collection.isPrivate ? 'Private' : 'Public'}</p>
+            <p className='collection-questions'>{collection.questions.length} Questions</p>
+            <DeleteCollectionButton collectionId={collection._id.toString()} />
           </div>
+        ))}
       </div>
     </div>
   );

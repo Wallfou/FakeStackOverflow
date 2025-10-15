@@ -1,4 +1,5 @@
 import './index.css';
+import useNewCollectionPage from '../../../../hooks/useNewCollectionPage';
 
 /**
  * Form component for creating a new collection.
@@ -8,33 +9,63 @@ import './index.css';
  * You can add additional class names if needed.
 */
 const NewCollectionPage = () => {
-  
+  const {
+    name,
+    description,
+    isPrivate,
+    loading,
+    error,
+    setName,
+    setDescription,
+    setIsPrivate,
+    postCollection,
+  } = useNewCollectionPage();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await postCollection();
+  };
+
   return (
     <div className='new-collection-page'>
       <h1 className='new-collection-title'>Create New Collection</h1>
 
-      <input
-        type='text'
-        placeholder='Collection Name'
-        className='new-collection-input'
-      />
+      <form onSubmit={handleSubmit}>
+        <input
+          type='text'
+          placeholder='collection name'
+          className='new-collection-input'
+          value={name}
+          onChange={e => setName(e.target.value)}
+          disabled={loading}
+          required
+        />
 
-      <input
-        type='text'
-        placeholder='Collection Description'
-        className='new-collection-input'
-      />
+        <input
+          type='text'
+          placeholder='collection description'
+          className='new-collection-input'
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          disabled={loading}
+        />
 
-      <label className='new-collection-checkbox'>
-        <input type='checkbox' checked={false} />
+        <label className='new-collection-checkbox'>
+          <input
+            type='checkbox'
+            checked={isPrivate}
+            onChange={e => setIsPrivate(e.target.checked)}
+            disabled={loading}
+          />
           Private Collection
-      </label>
+        </label>
 
-      <button className='new-collection-btn'>
-        Create
-      </button>
+        <button type='submit' className='new-collection-btn' disabled={loading}>
+          {loading ? 'creating rn...' : 'Create'}
+        </button>
+      </form>
 
-      <p className='new-collection-error'>Display proper error message</p>
+      {error && <p className='new-collection-error'>{error}</p>}
     </div>
   );
 };
