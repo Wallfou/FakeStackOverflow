@@ -1,5 +1,6 @@
 import './index.css';
 import { DatabaseCommunity } from '../../../../types/types';
+import useCommunityMembershipButton from '../../../../hooks/useCommunityMembershipButton';
 
 /**
  * Button component for joining/leaving communities.
@@ -11,13 +12,18 @@ import { DatabaseCommunity } from '../../../../types/types';
  * You can add more class names if needed.
 */
 const CommunityMembershipButton = ({ community }: { community: DatabaseCommunity }) => {
+  const { error, buttonText, buttonDisabled, handleToggleMembership } =
+    useCommunityMembershipButton(community);
 
   return (
     <>
-      <button className='btn-action-community'>
-        Join or Leave
+      <button
+        className='btn-action-community'
+        onClick={handleToggleMembership}
+        disabled={buttonDisabled}>
+        {buttonText}
       </button>
-      <p className='community-error'>Error Message</p>
+      {error && <p className='community-error'>{error}</p>}
     </>
   );
 };
