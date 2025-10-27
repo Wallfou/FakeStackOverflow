@@ -13,8 +13,6 @@ interface UseCommunityPageReturn {
   canViewCommunity: boolean;
 }
 
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:8000';
-
 const useCommunityPage = (communityId: string): UseCommunityPageReturn => {
   const [community, setCommunity] = useState<DatabaseCommunity | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -65,7 +63,7 @@ const useCommunityPage = (communityId: string): UseCommunityPageReturn => {
   useEffect(() => {
     if (!communityId) return;
 
-    const socket: Socket = io(SOCKET_URL, {
+    const socket: Socket = io({
       transports: ['websocket', 'polling'],
       withCredentials: true,
     });

@@ -15,8 +15,6 @@ interface UseCollectionPageResult {
   refresh: () => void;
 }
 
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL ?? 'http://localhost:4000';
-
 function useCollectionPage(collectionId: string): UseCollectionPageResult {
   const [collection, setCollection] = useState<Collection | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -44,7 +42,7 @@ function useCollectionPage(collectionId: string): UseCollectionPageResult {
   }, [fetchCollection]);
 
   useEffect(() => {
-    const socket: Socket = io(SOCKET_URL, { transports: ['websocket'] });
+    const socket: Socket = io({ transports: ['websocket'] });
 
     socket.emit('joiningCollectionRoom', collectionId);
 

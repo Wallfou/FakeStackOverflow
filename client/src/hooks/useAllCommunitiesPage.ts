@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getCommunities } from '../services/communityService.ts';
 import { DatabaseCommunity } from '../../../shared/types/community';
-import { io, Socket } from 'socket.io-client';
+import useUserContext from './useUserContext';
 
 interface UseAllCommunitiesPageReturn {
   communities: DatabaseCommunity[];
@@ -9,8 +9,6 @@ interface UseAllCommunitiesPageReturn {
   error: string | null;
   refreshCommunities: () => Promise<void>;
 }
-
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL ?? 'http://localhost:4000';
 
 /**
  * Custom hook for managing the state of all communities.
@@ -22,6 +20,7 @@ const useAllCommunitiesPage = (): UseAllCommunitiesPageReturn => {
   const [communities, setCommunities] = useState<DatabaseCommunity[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const { socket } = useUserContext();
 
   const fetchCommunities = useCallback(async () => {
     try {
@@ -52,38 +51,30 @@ const useAllCommunitiesPage = (): UseAllCommunitiesPageReturn => {
   }, [fetchCommunities]);
 
   useEffect(() => {
-    const socket: Socket = io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
-      withCredentials: true,
-    });
+    if (!socket) return;
 
     const handleCommunityUpdate = (payload: {
       type: 'created' | 'updated' | 'deleted';
       community: DatabaseCommunity;
     }) => {
-      if (payload.type === 'created') {
-        setCommunities(prev => [...prev, payload.community]);
-      } else if (payload.type === 'updated') {
-        setCommunities(prev =>
-          prev.map(community =>
-            community._id.toString() === payload.community._id.toString()
-              ? payload.community
-              : community,
-          ),
-        );
-      } else if (payload.type === 'deleted') {
-        setCommunities(prev =>
-          prev.filter(community => community._id.toString() !== payload.community._id.toString()),
-        );
-      }
+      setCommunities(prev => {
+        if (payload.type === 'created') {
+          return [...prev, payload.community];
+        }
+        if (payload.type === 'updated') {
+          return prev.map(c =>
+            String(c._id) === String(payload.community._id) ? payload.community : c,
+          );
+        }
+        return prev.filter(c => String(c._id) !== String(payload.community._id));
+      });
     };
 
     socket.on('communityUpdate', handleCommunityUpdate);
     return () => {
       socket.off('communityUpdate', handleCommunityUpdate);
-      socket.disconnect();
     };
-  }, []);
+  }, [socket]);
 
   return {
     communities,
